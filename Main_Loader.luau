@@ -2,6 +2,9 @@
     HCT_12072012 - ELITE EXECUTION HUB (V4.0 MODDED)
     Mục tiêu: Tối ưu hóa tốc độ nạp Anti-Kick và bảo vệ hệ thống.
 ]]
+if not loadstring then
+    getgenv().loadstring = function(...) return error("Executor không hỗ trợ loadstring") end
+end
 
 local CONFIG = {
     BASE_URL = "https://raw.githubusercontent.com/senseikivotos2001-dotcom/HCT_12072012/main/",
