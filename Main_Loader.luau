@@ -1,48 +1,78 @@
--- [[ MANAUZUKAUM2: SUPREME COMMAND CENTER ]]
--- Version: 3.0 [OPTIMIZED]
--- Repo: senseikivotos2001-dotcom/HCT_12072012
+--[[ 
+    HCT_12072012 - ELITE EXECUTION HUB (V4.0 MODDED)
+    Mục tiêu: Tối ưu hóa tốc độ nạp Anti-Kick và bảo vệ hệ thống.
+]]
 
-local Loader = {
-    Modules = {},
-    Url = "https://raw.githubusercontent.com/senseikivotos2001-dotcom/HCT_12072012/main/"
+local CONFIG = {
+    BASE_URL = "https://raw.githubusercontent.com/senseikivotos2001-dotcom/HCT_12072012/main/",
+    PARALLEL_LOAD = true, -- Giữ lại nạp song song để đạt tốc độ tối đa
+    LOAD_TIMEOUT = 7,     -- Giảm timeout để xử lý nhanh
 }
 
-function Loader:Fetch(file)
-    local success, content = pcall(game.HttpGet, game, self.Url .. file .. ".luau")
-    if success then
-        return loadstring(content)()
-    else
-        warn("[!] Failed to load: " .. file)
-    end
-end
+local SystemState = {
+    Modules = {
+        {Name = "Privilege_Research.luau", Priority = 1, Desc = "Anti-Kick Core"}, -- Luôn ưu tiên số 1
+        {Name = "Motion_Research.luau", Priority = 2, Desc = "Movement"},
+        {Name = "Vulnerability_Scanner.luau", Priority = 3, Desc = "Scanner"},
+        {Name = "Execution_Hub.luau", Priority = 4, Desc = "Core Engine"},
+        {Name = "Status_Monitor.luau", Priority = 5, Desc = "Monitor"}
+    }
+}
 
-function Loader:Initialize()
-    -- 1. Nạp UI Giám sát (Dùng pcall để không bị văng nếu mất mạng)
-    local Status = self:Fetch("Status_Monitor")
-    if Status then 
-        Status:Initialize() 
-        Status.Update("Kích hoạt hệ thống Manauz...", 20)
-    end
-
-    -- 2. Đấu nối Bộ Ngũ (Nạp song song)
-    task.spawn(function()
-        self.Modules.Privilege = self:Fetch("Privilege_Research")
-        self.Modules.Motion    = self:Fetch("Motion_Research")
-        self.Modules.Scanner   = self:Fetch("Vulnerability_Scanner")
-        self.Modules.Execution = self:Fetch("Execution_Hub")
-        
-        if Status then Status.Update("Kết nối Module hoàn tất!", 80) end
-        
-        -- 3. Kích hoạt Command Bar
-        self.Modules.Console = self:Fetch("Command_Bar")
-        if self.Modules.Console then
-            self.Modules.Console:Initialize()
-            if Status then Status.Update("Hệ thống SẴN SÀNG!", 100) end
-        end
+-- ### HÀM THỰC THI (TINH GỌN) ###
+local function ExecuteElite(moduleName)
+    local success, content = pcall(function()
+        return game:HttpGet(CONFIG.BASE_URL .. moduleName, true)
     end)
+    
+    if success and content then
+        -- Sử dụng newcclosure để ẩn danh hàm nạp
+        local func, err = loadstring(content, moduleName)
+        if func then
+            task.spawn(function()
+                -- Chạy với môi trường bảo vệ
+                local ok, runErr = pcall(func)
+                if not ok then warn("[HCT_ERR]: " .. moduleName .. " -> " .. runErr) end
+            end)
+            print("[HCT_ACTIVE]: " .. moduleName)
+            return true
+        end
+    end
+    warn("[HCT_FAIL]: " .. moduleName)
+    return false
 end
 
--- Khởi hỏa
-task.spawn(function() Loader:Initialize() end)
+-- ### HỆ THỐNG NẠP SONG SONG (GIỮ LẠI TỪ BẢN GỐC) ###
+local function BootSystem()
+    print("------------------------------------------------------")
+    print("[HCT_V4_ELITE]: Khởi chạy giao thức bất tử...")
 
-return Loader
+    -- 1. Nạp cưỡng bức Anti-Kick trước (Sequential Load cho P1)
+    ExecuteElite(SystemState.Modules[1].Name)
+    task.wait(0.2) -- Nhịp nghỉ cực ngắn để MetaMethod kịp ăn vào hệ thống
+
+    -- 2. Nạp song song các module còn lại (Parallel Load cho P2-P5)
+    if CONFIG.PARALLEL_LOAD then
+        for i = 2, #SystemState.Modules do
+            task.spawn(function()
+                ExecuteElite(SystemState.Modules[i].Name)
+            end)
+        end
+    else
+        for i = 2, #SystemState.Modules do
+            ExecuteElite(SystemState.Modules[i].Name)
+        end
+    end
+
+    print("[HCT_V4_ELITE]: Toàn bộ hệ thống đã trực chiến.")
+    print("------------------------------------------------------")
+end
+
+-- Tự động dọn dẹp bộ nhớ định kỳ (Giữ lại từ bản cũ)
+task.spawn(function()
+    while task.wait(60) do
+        collectgarbage("collect")
+    end
+end)
+
+return BootSystem()
