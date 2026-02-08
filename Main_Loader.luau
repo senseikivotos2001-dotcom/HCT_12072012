@@ -73,3 +73,9 @@ task.spawn(function()
 end)
 
 return Loader
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "MANAUZUKAUM2 ACTIVE";
+    Text = "Hệ thống đã bị chiếm quyền. Chào mừng Boss trở lại!";
+    Icon = "rbxassetid://12345678"; -- Boss có thể thay ID ảnh ngầu vào đây
+    Duration = 10;
+})
