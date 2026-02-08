@@ -1,0 +1,23 @@
+============================================================
+           HCT_12072012 - HỆ THỐNG NGHIÊN CỨU NỘI BỘ
+============================================================
+
+LƯU Ý QUAN TRỌNG:
+Dự án này được thiết lập và duy trì DUY NHẤT cho mục đích:
+1. NGHIÊN CỨU HỌC THUẬT: Tìm hiểu về cấu trúc mã nguồn và logic hệ thống.
+2. HỌC TẬP CÁ NHÂN: Cải thiện kỹ năng lập trình tối ưu hóa trên nền tảng Luau.
+
+TUYÊN BỐ NGHIÊM CẤM:
+- TUYỆT ĐỐI KHÔNG được áp dụng các mã nguồn này vào mục đích trục lợi cá nhân.
+- KHÔNG được lợi dụng hệ thống để thực hiện các hành vi gây ảnh hưởng tiêu cực 
+  đến trải nghiệm chung của cộng đồng hoặc vi phạm chính sách bên thứ ba.
+- Mọi hành vi cố tình biến tướng mục đích nghiên cứu của dự án này đều là 
+  vi phạm nguyên tắc cốt lõi của HCT Framework.
+
+TRÁCH NHIỆM:
+Tác giả không chịu bất kỳ trách nhiệm nào nếu người dùng cố tình làm trái 
+với các điều khoản nghiên cứu nêu trên. Người sử dụng phải tự ý thức 
+và chịu trách nhiệm trước mọi hành động của mình.
+
+"Kiến thức là để xây dựng, không phải để phá hoại."
+============================================================
