@@ -1,81 +1,86 @@
---[[ 
-    HCT_12072012 - ELITE EXECUTION HUB (V4.0 MODDED)
-    Mục tiêu: Tối ưu hóa tốc độ nạp Anti-Kick và bảo vệ hệ thống.
-]]
-if not loadstring then
-    getgenv().loadstring = function(...) return error("Executor không hỗ trợ loadstring") end
-end
+-- [[ HCT_12072012 - SYSTEM BOOTLOADER V7.0 ]]
+-- Tích hợp: Kernel Virtualizer (QuantumLock v2.1)
+-- Target: Delta X / Fluxus (Mobile Optimization)
 
 local CONFIG = {
-    BASE_URL = "https://raw.githubusercontent.com/senseikivotos2001-dotcom/HCT_12072012/main/",
-    PARALLEL_LOAD = true, -- Giữ lại nạp song song để đạt tốc độ tối đa
-    LOAD_TIMEOUT = 7,     -- Giảm timeout để xử lý nhanh
-}
-
-local SystemState = {
-    Modules = {
-        {Name = "Privilege_Research.luau", Priority = 1, Desc = "Anti-Kick Core"}, -- Luôn ưu tiên số 1
-        {Name = "Motion_Research.luau", Priority = 2, Desc = "Movement"},
-        {Name = "Vulnerability_Scanner.luau", Priority = 3, Desc = "Scanner"},
-        {Name = "Execution_Hub.luau", Priority = 4, Desc = "Core Engine"},
-        {Name = "Status_Monitor.luau", Priority = 5, Desc = "Monitor"}
+    REPO_URL = "https://raw.githubusercontent.com/senseikivotos2001-dotcom/HCT_12072012/main/",
+    KERNEL_FILE = "Kernel_Virtualizer.luau",
+    -- Danh sách Module và độ ưu tiên
+    MODULES = {
+        {Name = "Privilege_Research.luau",    Priority = "CRITICAL", Stealth = true}, -- Anti-Kick (Cần chạy ngay)
+        {Name = "Vulnerability_Scanner.luau", Priority = "HIGH",     Stealth = true}, -- Quét lỗ hổng
+        {Name = "Motion_Research.luau",       Priority = "NORMAL",   Stealth = false}, -- Bay/Tốc độ
+        {Name = "Execution_Hub.luau",         Priority = "NORMAL",   Stealth = false}, -- UI/Menu
+        {Name = "Status_Monitor.luau",        Priority = "LOW",      Stealth = true}   -- Monitor
     }
 }
 
--- ### HÀM THỰC THI (TINH GỌN) ###
-local function ExecuteElite(moduleName)
-    local success, content = pcall(function()
-        return game:HttpGet(CONFIG.BASE_URL .. moduleName, true)
+-- Hàm tiện ích: Gửi thông báo hệ thống
+local function Notify(title, msg)
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = title; Text = msg; Duration = 5;
+        })
     end)
-    
-    if success and content then
-        -- Sử dụng newcclosure để ẩn danh hàm nạp
-        local func, err = loadstring(content, moduleName)
-        if func then
-            task.spawn(function()
-                -- Chạy với môi trường bảo vệ
-                local ok, runErr = pcall(func)
-                if not ok then warn("[HCT_ERR]: " .. moduleName .. " -> " .. runErr) end
-            end)
-            print("[HCT_ACTIVE]: " .. moduleName)
-            return true
-        end
-    end
-    warn("[HCT_FAIL]: " .. moduleName)
-    return false
+    print(string.format("[>> SYSTEM]: %s | %s", title, msg))
 end
 
--- ### HỆ THỐNG NẠP SONG SONG (GIỮ LẠI TỪ BẢN GỐC) ###
-local function BootSystem()
-    print("------------------------------------------------------")
-    print("[HCT_V4_ELITE]: Khởi chạy giao thức bất tử...")
+-- ================= [ GIAI ĐOẠN 1: KHỞI ĐỘNG KERNEL ] =================
+Notify("HCT BOOT", "Đang khởi tạo môi trường ảo QuantumLock...")
 
-    -- 1. Nạp cưỡng bức Anti-Kick trước (Sequential Load cho P1)
-    ExecuteElite(SystemState.Modules[1].Name)
-    task.wait(0.2) -- Nhịp nghỉ cực ngắn để MetaMethod kịp ăn vào hệ thống
+local success_k, kernel_code = pcall(game.HttpGet, game, CONFIG.REPO_URL .. CONFIG.KERNEL_FILE)
 
-    -- 2. Nạp song song các module còn lại (Parallel Load cho P2-P5)
-    if CONFIG.PARALLEL_LOAD then
-        for i = 2, #SystemState.Modules do
-            task.spawn(function()
-                ExecuteElite(SystemState.Modules[i].Name)
-            end)
+if not success_k or not kernel_code then
+    return Notify("FATAL ERROR", "Không thể tải Kernel! Hệ thống dừng hoạt động.")
+end
+
+-- Nạp Kernel vào bộ nhớ
+local load_k, err_k = loadstring(kernel_code)
+if not load_k then
+    return Notify("KERNEL PANIC", "Lỗi cú pháp Kernel: " .. tostring(err_k))
+end
+
+-- Kích hoạt Kernel và lấy API điều khiển
+local HCT_API = load_k() 
+getgenv().HCT_API = HCT_API -- Lưu API ra global để dùng sau này nếu cần
+
+-- Kiểm tra sức khỏe Kernel
+local status = HCT_API.GetStatus()
+if not status.Active then
+    return Notify("KERNEL FAIL", "Kernel không khởi động được!")
+end
+
+Notify("KERNEL ONLINE", string.format("Integrity: %d%% | Active Threads: %d", status.Integrity, 0))
+
+-- ================= [ GIAI ĐOẠN 2: CHƯNG CẤT MODULE ] =================
+local loaded_count = 0
+
+for _, module in ipairs(CONFIG.MODULES) do
+    -- Tải code thô từ GitHub
+    local url = CONFIG.REPO_URL .. module.Name
+    local s, code = pcall(game.HttpGet, game, url)
+    
+    if s and code then
+        -- Dùng Kernel để "Inject" (Chưng cất) code vào môi trường ảo
+        -- Thay vì dùng loadstring() thường, ta dùng HCT_API:Inject()
+        local injected = HCT_API:Inject(module.Name, code, {
+            priority = module.Priority,
+            stealth = module.Stealth,
+            persistence = true
+        })
+        
+        if injected then
+            print(string.format("[>> INJECT]: %-25s [OK] -> Priority: %s", module.Name, module.Priority))
+            loaded_count = loaded_count + 1
+        else
+            warn(string.format("[>> ERROR]: %-25s [FAIL] -> Kernel từ chối nạp.", module.Name))
         end
     else
-        for i = 2, #SystemState.Modules do
-            ExecuteElite(SystemState.Modules[i].Name)
-        end
+        warn(string.format("[>> MISSING]: %-25s [404] -> Không tìm thấy file.", module.Name))
     end
-
-    print("[HCT_V4_ELITE]: Toàn bộ hệ thống đã trực chiến.")
-    print("------------------------------------------------------")
+    
+    task.wait(0.2) -- Nghỉ nhẹ để tránh nghẽn mạng Delta X
 end
 
--- Tự động dọn dẹp bộ nhớ định kỳ (Giữ lại từ bản cũ)
-task.spawn(function()
-    while task.wait(60) do
-        collectgarbage("collect")
-    end
-end)
-
-return BootSystem()
+-- ================= [ GIAI ĐOẠN 3: HOÀN TẤT ] =================
+Notify("SYSTEM READY", string.format("Đã nạp thành công %d/%d module vào Vùng Ảo.", loaded_count, #CONFIG.MODULES))
